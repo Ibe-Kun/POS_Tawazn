@@ -294,7 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // =================================================================================
     // CONFIGURATION
     // =================================================================================
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyE8I67dkZjeK7mgYLVf8yf8NKPV-l64Wnpg5T91Q8nXzKIHLx3NDv6irotvTKAOz6A/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzM61wzY529OoM7aJiNwzwGey0aQnIjxxuneYAMf4kLqg6mJL0bx_zbXQx_4vwZBrmA/exec';
 
     // =================================================================================
     // STATE MANAGEMENT
@@ -638,9 +638,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (result && result.success) {
             products = result.data.products;
             staff = result.data.staff;
-            
-            const localTransactions = localStorage.getItem('pos_transactions');
-            transactions = localTransactions ? JSON.parse(localTransactions) : [];
+            transactions = result.data.transactions || []; // Get transactions from server
             
             renderProducts();
             renderCart();
@@ -759,8 +757,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (result && result.success) {
             showToast('Transaksi berhasil!', 'success');
             products = result.data.products;
-            transactions.push(transactionData);
-            localStorage.setItem('pos_transactions', JSON.stringify(transactions));
+            transactions.push(transactionData); // Update local state for immediate UI feedback
             cart = [];
             customerNameInput.value = '';
 
@@ -906,8 +903,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (result && result.success) {
                 products = result.data.products;
                 
-                transactions = transactions.filter(t => t.id !== transactionId);
-                localStorage.setItem('pos_transactions', JSON.stringify(transactions));
+                transactions = transactions.filter(t => t.id !== transactionId); // Update local state for immediate UI feedback
 
                 showToast('Transaksi berhasil dibatalkan dan stok dikembalikan.', 'success');
                 
@@ -956,4 +952,6 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
+
 
