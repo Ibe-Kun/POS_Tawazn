@@ -294,8 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // =================================================================================
     // CONFIGURATION
     // =================================================================================
-    // TODO: Ganti dengan URL Google Apps Script Web App Anda
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzeudb82G_3rpvYc6Ry012VLeBVv6K-vmiD_-QFg6a8RT704illdIK3EhT7VFuiyLwt/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyE8I67dkZjeK7mgYLVf8yf8NKPV-l64Wnpg5T91Q8nXzKIHLx3NDv6irotvTKAOz6A/exec';
 
     // =================================================================================
     // STATE MANAGEMENT
@@ -687,7 +686,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         pageTitle.textContent = titles[pageName];
 
-        addProductBtn.style.display = pageName === 'pos' ? 'flex' : 'none';
+        addProductBtn.style.display = (pageName === 'pos' || pageName === 'stock') ? 'flex' : 'none';
 
         if (pageName === 'stock') renderStockPage();
         if (pageName === 'staff') renderStaffPage();
@@ -759,14 +758,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (result && result.success) {
             showToast('Transaksi berhasil!', 'success');
-            // Update local state
             products = result.data.products;
             transactions.push(transactionData);
             localStorage.setItem('pos_transactions', JSON.stringify(transactions));
             cart = [];
             customerNameInput.value = '';
 
-            // Rerender UI
             renderProducts();
             renderCart();
         } else {
@@ -826,7 +823,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.handleDeleteProduct = async (productId) => {
-        if (confirm(`Apakah Anda yakin ingin menghapus produk ini? Produk ini akan dihapus dari semua riwayat transaksi.`)) {
+        if (confirm(`Apakah Anda yakin ingin menghapus produk ini?`)) {
             const result = await callAppsScript('deleteProduct', { id: productId });
             if (result && result.success) {
                 products = result.data.products;
@@ -888,7 +885,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderStockPage();
             if(currentPage === 'pos') renderProducts();
             showToast('Stok berhasil diperbarui.', 'success');
-            input.value = ''; // Clear input after success
+            input.value = '';
         } else {
              showToast(result.message || 'Gagal memperbarui stok.', 'error');
         }
@@ -899,14 +896,27 @@ document.addEventListener('DOMContentLoaded', () => {
         menu.classList.toggle('hidden');
     };
     
-    window.handleDeleteTransaction = (transactionId) => {
-        if (confirm('Apakah Anda yakin ingin menghapus transaksi ini?')) {
-            const transactionIndex = transactions.findIndex(t => t.id === transactionId);
-            if(transactionIndex > -1) {
-                transactions.splice(transactionIndex, 1);
+    window.handleDeleteTransaction = async (transactionId) => {
+        if (confirm('Apakah Anda yakin ingin menghapus transaksi ini? Stok produk akan dikembalikan.')) {
+            const transactionToDelete = transactions.find(t => t.id === transactionId);
+            if (!transactionToDelete) return;
+
+            const result = await callAppsScript('deleteTransaction', transactionToDelete);
+
+            if (result && result.success) {
+                products = result.data.products;
+                
+                transactions = transactions.filter(t => t.id !== transactionId);
                 localStorage.setItem('pos_transactions', JSON.stringify(transactions));
-                showToast('Transaksi berhasil dihapus.', 'success');
-                renderDashboard(); // Re-render the dashboard to reflect changes
+
+                showToast('Transaksi berhasil dibatalkan dan stok dikembalikan.', 'success');
+                
+                renderDashboard(); 
+                if (currentPage === 'pos') renderProducts();
+                if (currentPage === 'stock') renderStockPage();
+                
+            } else {
+                showToast(result.message || 'Gagal membatalkan transaksi.', 'error');
             }
         }
     };
@@ -946,8 +956,4 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
-
-
-
-
 
