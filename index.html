@@ -272,32 +272,13 @@
                         <label for="product-price" class="block text-sm font-medium text-gray-700">Harga</label>
                         <input type="number" id="product-price" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                     </div>
-                     <div>
-                        <label for="product-image" class="block text-sm font-medium text-gray-700">URL Gambar</label>
-                        <input type="url" id="product-image" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                    </div>
                     <div>
-                        <label for="product-type" class="block text-sm font-medium text-gray-700">Jenis Produk</label>
-                        <select id="product-type" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                            <option value="product">Produk Satuan</option>
-                            <option value="bundle">Paket Bundle</option>
-                        </select>
-                    </div>
-                    <div id="product-stock-container">
                         <label for="product-stock" class="block text-sm font-medium text-gray-700">Stok Awal</label>
                         <input type="number" id="product-stock" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                     </div>
-                    <div id="bundle-config-container" class="hidden space-y-4">
-                        <label class="block text-sm font-medium text-gray-700">Isi Paket Bundle</label>
-                        <div class="flex items-center gap-2">
-                            <select id="bundle-product-select" class="flex-grow border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                                <!-- Options populated by JS -->
-                            </select>
-                            <button type="button" id="add-to-bundle-btn" class="bg-indigo-500 text-white px-3 py-2 rounded-lg shadow hover:bg-indigo-600"><i class="fas fa-plus"></i></button>
-                        </div>
-                        <ul id="bundle-items-list" class="space-y-2 border rounded-md p-2 h-32 overflow-y-auto bg-gray-50">
-                           <!-- JS generated list -->
-                        </ul>
+                    <div>
+                        <label for="product-image" class="block text-sm font-medium text-gray-700">URL Gambar</label>
+                        <input type="url" id="product-image" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                     </div>
                 </div>
                 <div class="mt-8 flex justify-end space-x-3">
@@ -313,7 +294,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // =================================================================================
     // CONFIGURATION
     // =================================================================================
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxWKa2eitKsxH-tsXIg6ADCjPh8048zLMQQK9nE0d8aE7mlmcTYVYd3BmMVINnKGx3y/exec';
+    // TODO: Ganti dengan URL Google Apps Script Web App Anda
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzeudb82G_3rpvYc6Ry012VLeBVv6K-vmiD_-QFg6a8RT704illdIK3EhT7VFuiyLwt/exec';
 
     // =================================================================================
     // STATE MANAGEMENT
@@ -356,14 +338,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const staffDropdown = document.getElementById('staff-dropdown');
     const customerNameInput = document.getElementById('customer-name');
     const dashboardFilter = document.getElementById('dashboard-filter');
-    const productTypeSelect = document.getElementById('product-type');
-    const productStockContainer = document.getElementById('product-stock-container');
-    const bundleConfigContainer = document.getElementById('bundle-config-container');
-    const bundleProductSelect = document.getElementById('bundle-product-select');
-    const addToBundleBtn = document.getElementById('add-to-bundle-btn');
-    const bundleItemsList = document.getElementById('bundle-items-list');
-    const productStockInput = document.getElementById('product-stock');
-
 
     // =================================================================================
     // UTILITY & HELPER FUNCTIONS
@@ -390,25 +364,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     };
 
-    const calculateBundleStock = (bundle) => {
-        if (!bundle.bundleItems || bundle.bundleItems.length === 0) {
-            return 0;
-        }
-
-        let possibleBundles = [];
-        for (const item of bundle.bundleItems) {
-            const productInBundle = products.find(p => p.id === item.id);
-            if (!productInBundle || productInBundle.stock === undefined) {
-                return 0; // If a component product doesn't exist or has no stock, we can't make any bundles.
-            }
-            const maxForThisItem = Math.floor(productInBundle.stock / item.quantity);
-            possibleBundles.push(maxForThisItem);
-        }
-
-        if(possibleBundles.length === 0) return 0;
-        return Math.min(...possibleBundles);
-    };
-
     // =================================================================================
     // RENDER FUNCTIONS
     // =================================================================================
@@ -420,14 +375,10 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         products.forEach(p => {
-            const isBundle = p.type === 'bundle';
-            const displayStock = isBundle ? calculateBundleStock(p) : p.stock;
-            const disabled = displayStock <= 0 ? 'disabled' : '';
-
+            const disabled = p.stock <= 0 ? 'disabled' : '';
             const card = document.createElement('div');
             card.className = 'bg-white rounded-lg shadow p-4 flex flex-col relative';
             card.innerHTML = `
-                <span class="absolute top-2 left-2 bg-indigo-500 text-white text-xs font-bold px-2 py-1 rounded-full ${!isBundle ? 'hidden' : ''}">BUNDLE</span>
                 <div class="absolute top-2 right-2">
                     <button class="text-gray-500 hover:text-gray-800 focus:outline-none" onclick="toggleProductMenu('${p.id}')">
                         <i class="fas fa-ellipsis-v"></i>
@@ -440,7 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <img src="${p.image}" alt="${p.name}" class="w-full h-32 object-cover rounded-md mb-4" onerror="this.onerror=null;this.src='https://placehold.co/300x200/e2e8f0/adb5bd?text=Gambar\\nTdk\\nTersedia';">
                 <h4 class="text-md font-bold text-gray-800 flex-1">${p.name}</h4>
                 <p class="text-gray-600">${formatCurrency(p.price)}</p>
-                <p class="text-sm ${displayStock > 5 ? 'text-green-600' : 'text-red-600'}">Stok: ${displayStock}</p>
+                <p class="text-sm ${p.stock > 5 ? 'text-green-600' : 'text-red-600'}">Stok: ${p.stock}</p>
                 <button ${disabled} onclick="addToCart('${p.id}')" class="mt-4 w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed">
                     Tambah
                 </button>
@@ -489,12 +440,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const renderStockPage = () => {
         stockListContainer.innerHTML = '';
-        const singleProducts = products.filter(p => p.type !== 'bundle');
-        if (singleProducts.length === 0) {
-            stockListContainer.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-500">Belum ada produk satuan.</td></tr>';
+        if (products.length === 0) {
+            stockListContainer.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-500">Belum ada produk.</td></tr>';
             return;
         }
-        singleProducts.forEach(p => {
+        products.forEach(p => {
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td class="px-6 py-4 whitespace-nowrap">
@@ -687,17 +637,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadInitialData = async () => {
         const result = await callAppsScript('getInitialData');
         if (result && result.success) {
-            products = result.data.products.map(p => {
-                if (p.bundleItems && typeof p.bundleItems === 'string') {
-                    try {
-                        p.bundleItems = JSON.parse(p.bundleItems);
-                    } catch (e) {
-                        console.error('Failed to parse bundleItems for product:', p.id);
-                        p.bundleItems = [];
-                    }
-                }
-                return p;
-            });
+            products = result.data.products;
             staff = result.data.staff;
             
             const localTransactions = localStorage.getItem('pos_transactions');
@@ -710,9 +650,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // Use mock data if backend fails
             console.warn("Could not fetch from backend. Using mock data.");
             products = [
-                { id: 'prod1', name: 'Kopi Susu Gula Aren', price: 18000, stock: 20, image: 'https://placehold.co/300x200/663300/FFFFFF?text=Kopi+Susu', type: 'product' },
-                { id: 'prod2', name: 'Croissant Cokelat', price: 22000, stock: 15, image: 'https://placehold.co/300x200/D2691E/FFFFFF?text=Croissant', type: 'product' },
-                { id: 'prod3', name: 'Matcha Latte', price: 25000, stock: 0, image: 'https://placehold.co/300x200/3CB371/FFFFFF?text=Matcha', type: 'product' }
+                { id: 'prod1', name: 'Kopi Susu Gula Aren', price: 18000, stock: 20, image: 'https://placehold.co/300x200/663300/FFFFFF?text=Kopi+Susu' },
+                { id: 'prod2', name: 'Croissant Cokelat', price: 22000, stock: 15, image: 'https://placehold.co/300x200/D2691E/FFFFFF?text=Croissant' },
+                { id: 'prod3', name: 'Matcha Latte', price: 25000, stock: 0, image: 'https://placehold.co/300x200/3CB371/FFFFFF?text=Matcha' }
             ];
             staff = [
                 { id: 'staff1', name: 'Andi' },
@@ -747,7 +687,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         pageTitle.textContent = titles[pageName];
 
-        addProductBtn.style.display = (pageName === 'pos' || pageName === 'stock') ? 'flex' : 'none';
+        addProductBtn.style.display = pageName === 'pos' ? 'flex' : 'none';
 
         if (pageName === 'stock') renderStockPage();
         if (pageName === 'staff') renderStaffPage();
@@ -758,11 +698,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const product = products.find(p => p.id === productId);
         const productInCart = cart.find(item => item.id === productId);
 
-        const availableStock = product.type === 'bundle' ? calculateBundleStock(product) : product.stock;
-
-        if (availableStock > 0) {
+        if (product.stock > 0) {
             if (productInCart) {
-                if (availableStock > productInCart.quantity) {
+                if (product.stock > productInCart.quantity) {
                    productInCart.quantity++;
                 } else {
                     showToast(`Stok ${product.name} tidak mencukupi`, 'error');
@@ -781,9 +719,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const product = products.find(p => p.id === productId);
             const newQuantity = cart[itemIndex].quantity + change;
             
-            const availableStock = product.type === 'bundle' ? calculateBundleStock(product) : product.stock;
-
-            if (change > 0 && availableStock <= cart[itemIndex].quantity) {
+            if (change > 0 && product.stock <= cart[itemIndex].quantity) {
                 showToast(`Stok ${product.name} tidak mencukupi`, 'error');
                 return;
             }
@@ -823,17 +759,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (result && result.success) {
             showToast('Transaksi berhasil!', 'success');
-            products = result.data.products.map(p => {
-                if (p.bundleItems && typeof p.bundleItems === 'string') {
-                    p.bundleItems = JSON.parse(p.bundleItems);
-                }
-                return p;
-            });
+            // Update local state
+            products = result.data.products;
             transactions.push(transactionData);
             localStorage.setItem('pos_transactions', JSON.stringify(transactions));
             cart = [];
             customerNameInput.value = '';
 
+            // Rerender UI
             renderProducts();
             renderCart();
         } else {
@@ -844,24 +777,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const showProductModal = (product = null) => {
         productForm.reset();
         document.getElementById('product-id').value = '';
-        bundleItemsList.innerHTML = '';
-        productTypeSelect.value = 'product';
-        toggleProductType();
 
         if (product) {
             modalTitle.textContent = 'Edit Produk';
             document.getElementById('product-id').value = product.id;
             document.getElementById('product-name').value = product.name;
             document.getElementById('product-price').value = product.price;
+            document.getElementById('product-stock').value = product.stock;
             document.getElementById('product-image').value = product.image;
-            productTypeSelect.value = product.type || 'product';
-            toggleProductType();
-
-            if (product.type === 'bundle' && product.bundleItems) {
-                product.bundleItems.forEach(item => addBundleItemToList(item.id, item.quantity));
-            } else {
-                productStockInput.value = product.stock;
-            }
         } else {
             modalTitle.textContent = 'Tambah Produk Baru';
         }
@@ -875,45 +798,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const handleFormSubmit = async (e) => {
         e.preventDefault();
         const id = document.getElementById('product-id').value;
-        const type = productTypeSelect.value;
-        
         const productData = {
             id: id || 'prod-' + Date.now(),
             name: document.getElementById('product-name').value,
             price: parseFloat(document.getElementById('product-price').value),
-            image: document.getElementById('product-image').value,
-            type: type
+            stock: parseInt(document.getElementById('product-stock').value, 10),
+            image: document.getElementById('product-image').value
         };
-
-        if(type === 'bundle') {
-            const items = [];
-            bundleItemsList.querySelectorAll('li').forEach(li => {
-                items.push({
-                    id: li.dataset.id,
-                    quantity: parseInt(li.querySelector('input').value, 10)
-                });
-            });
-            if (items.length === 0) {
-                showToast('Paket bundle harus berisi minimal satu produk.', 'error');
-                return;
-            }
-            productData.bundleItems = items;
-            productData.stock = 0; // Bundles don't have their own stock
-        } else {
-            productData.stock = parseInt(productStockInput.value, 10);
-            productData.bundleItems = [];
-        }
 
         const action = id ? 'updateProduct' : 'addProduct';
         const result = await callAppsScript(action, productData);
         
         if (result && result.success) {
-            products = result.data.products.map(p => {
-                if (p.bundleItems && typeof p.bundleItems === 'string') {
-                    p.bundleItems = JSON.parse(p.bundleItems);
-                }
-                return p;
-            });
+            products = result.data.products;
             renderProducts();
             if (currentPage === 'stock') renderStockPage();
             hideProductModal();
@@ -929,15 +826,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.handleDeleteProduct = async (productId) => {
-        if (confirm(`Apakah Anda yakin ingin menghapus produk ini?`)) {
+        if (confirm(`Apakah Anda yakin ingin menghapus produk ini? Produk ini akan dihapus dari semua riwayat transaksi.`)) {
             const result = await callAppsScript('deleteProduct', { id: productId });
             if (result && result.success) {
-                products = result.data.products.map(p => {
-                    if (p.bundleItems && typeof p.bundleItems === 'string') {
-                        p.bundleItems = JSON.parse(p.bundleItems);
-                    }
-                    return p;
-                });
+                products = result.data.products;
                 renderProducts();
                 if (currentPage === 'stock') renderStockPage();
                 showToast('Produk berhasil dihapus.', 'success');
@@ -992,16 +884,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const result = await callAppsScript('updateStock', payload);
 
         if (result && result.success) {
-            products = result.data.products.map(p => {
-                 if (p.bundleItems && typeof p.bundleItems === 'string') {
-                    p.bundleItems = JSON.parse(p.bundleItems);
-                }
-                return p;
-            });
+            products = result.data.products;
             renderStockPage();
             if(currentPage === 'pos') renderProducts();
             showToast('Stok berhasil diperbarui.', 'success');
-            input.value = '';
+            input.value = ''; // Clear input after success
         } else {
              showToast(result.message || 'Gagal memperbarui stok.', 'error');
         }
@@ -1012,86 +899,17 @@ document.addEventListener('DOMContentLoaded', () => {
         menu.classList.toggle('hidden');
     };
     
-    window.handleDeleteTransaction = async (transactionId) => {
-        if (confirm('Apakah Anda yakin ingin menghapus transaksi ini? Stok produk akan dikembalikan.')) {
-            const transactionToDelete = transactions.find(t => t.id === transactionId);
-            if (!transactionToDelete) return;
-
-            const result = await callAppsScript('deleteTransaction', transactionToDelete);
-
-            if (result && result.success) {
-                products = result.data.products.map(p => {
-                    if (p.bundleItems && typeof p.bundleItems === 'string') {
-                        p.bundleItems = JSON.parse(p.bundleItems);
-                    }
-                    return p;
-                });
-                
-                transactions = transactions.filter(t => t.id !== transactionId);
+    window.handleDeleteTransaction = (transactionId) => {
+        if (confirm('Apakah Anda yakin ingin menghapus transaksi ini?')) {
+            const transactionIndex = transactions.findIndex(t => t.id === transactionId);
+            if(transactionIndex > -1) {
+                transactions.splice(transactionIndex, 1);
                 localStorage.setItem('pos_transactions', JSON.stringify(transactions));
-
-                showToast('Transaksi berhasil dibatalkan dan stok dikembalikan.', 'success');
-                
-                renderDashboard(); 
-                if (currentPage === 'pos') renderProducts();
-                if (currentPage === 'stock') renderStockPage();
-                
-            } else {
-                showToast(result.message || 'Gagal membatalkan transaksi.', 'error');
+                showToast('Transaksi berhasil dihapus.', 'success');
+                renderDashboard(); // Re-render the dashboard to reflect changes
             }
         }
     };
-
-    const toggleProductType = () => {
-        if (productTypeSelect.value === 'bundle') {
-            productStockContainer.classList.add('hidden');
-            bundleConfigContainer.classList.remove('hidden');
-            productStockInput.required = false;
-            populateBundleProductSelect();
-        } else {
-            productStockContainer.classList.remove('hidden');
-            bundleConfigContainer.classList.add('hidden');
-            productStockInput.required = true;
-        }
-    };
-
-    const populateBundleProductSelect = () => {
-        bundleProductSelect.innerHTML = '<option value="">Pilih produk...</option>';
-        const singleProducts = products.filter(p => p.type !== 'bundle');
-        singleProducts.forEach(p => {
-            const option = document.createElement('option');
-            option.value = p.id;
-            option.textContent = p.name;
-            bundleProductSelect.appendChild(option);
-        });
-    };
-    
-    const addBundleItemToList = (productId, quantity = 1) => {
-        const product = products.find(p => p.id === productId);
-        if (!product) return;
-
-        // Cek jika produk sudah ada di list
-        const existingItem = bundleItemsList.querySelector(`li[data-id="${productId}"]`);
-        if (existingItem) {
-            showToast('Produk sudah ada di dalam paket.', 'error');
-            return;
-        }
-
-        const li = document.createElement('li');
-        li.dataset.id = productId;
-        li.className = 'flex items-center justify-between bg-white p-2 rounded';
-        li.innerHTML = `
-            <span class="text-sm">${product.name}</span>
-            <div class="flex items-center gap-2">
-                <label class="text-sm">Qty:</label>
-                <input type="number" min="1" value="${quantity}" class="w-16 border-gray-300 rounded-md text-sm p-1">
-                <button type="button" class="text-red-500 hover:text-red-700">&times;</button>
-            </div>
-        `;
-        li.querySelector('button').addEventListener('click', () => li.remove());
-        bundleItemsList.appendChild(li);
-    };
-
 
     // Close product menu if clicked outside
     document.addEventListener('click', function(event) {
@@ -1119,12 +937,6 @@ document.addEventListener('DOMContentLoaded', () => {
     addStaffForm.addEventListener('submit', handleAddStaff);
     completeTransactionBtn.addEventListener('click', handleTransaction);
     dashboardFilter.addEventListener('change', renderDashboard);
-    productTypeSelect.addEventListener('change', toggleProductType);
-    addToBundleBtn.addEventListener('click', () => {
-        if(bundleProductSelect.value) {
-            addBundleItemToList(bundleProductSelect.value);
-        }
-    });
 
     // Load data and start the app
     loadInitialData().then(() => {
@@ -1134,6 +946,8 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
+
 
 
 
