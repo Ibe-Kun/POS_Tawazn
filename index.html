@@ -182,7 +182,7 @@
 
                 <!-- Dashboard Page -->
                 <div id="dashboard-page" class="hidden space-y-6">
-                    <!-- Dashboard content -->
+                    <!-- Dashboard content will be dynamically inserted here -->
                 </div>
             </div>
         </main>
@@ -374,6 +374,7 @@ document.addEventListener('DOMContentLoaded', () => {
         cartItemsContainer.innerHTML = '';
         const subtotal = cart.reduce((sum, item) => {
             const product = products.find(p => p.id === item.id);
+            if (!product) return sum;
             return sum + (product.price * item.quantity);
         }, 0);
 
@@ -508,54 +509,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    // API CALLS
-    const callAppsScript = async (action, payload) => {
-        if (!SCRIPT_URL) {
-            showToast('URL Google Apps Script belum diatur!', 'error');
-            return { success: false, message: 'URL script belum diatur!' };
-        }
-        showLoader();
-        try {
-            const response = await fetch(SCRIPT_URL, {
-                method: 'POST',
-                mode: 'cors',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action, payload })
-            });
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            return await response.json();
-        } catch (error) {
-            console.error('Error calling Apps Script:', error);
-            showToast('Gagal terhubung ke backend.', 'error');
-            return { success: false, error: error.message };
-        } finally {
-            hideLoader();
-        }
-    };
-
-    const loadInitialData = async () => {
-        const result = await callAppsScript('getInitialData');
-        if (result && result.success) {
-            products = result.data.products;
-            staff = result.data.staff;
-            transactions = result.data.transactions || [];
-            categories = result.data.categories || [];
-            
-            renderAll();
-        } else {
-            showToast('Gagal memuat data awal.', 'error');
-        }
-    };
-
-    const renderAll = () => {
-        renderProducts();
-        renderCart();
-        renderStaffDropdown();
-        renderCategoryFilters();
-        populateCategoryDropdown();
-        renderCategoryList();
-    };
-    
     const renderStaffDropdown = () => {
         staffDropdown.innerHTML = '';
         if (staff.length === 0) {
@@ -729,8 +682,123 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // API CALLS
+    const callAppsScript = async (action, payload) => {
+        if (!SCRIPT_URL) {
+            showToast('URL Google Apps Script belum diatur!', 'error');
+            return { success: false, message: 'URL script belum diatur!' };
+        }
+        showLoader();
+        try {
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'cors',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action, payload })
+            });
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            return await response.json();
+        } catch (error) {
+            console.error('Error calling Apps Script:', error);
+            showToast('Gagal terhubung ke backend.', 'error');
+            return { success: false, error: error.message };
+        } finally {
+            hideLoader();
+        }
+    };
 
+    const loadInitialData = async () => {
+        const result = await callAppsScript('getInitialData');
+        if (result && result.success) {
+            products = result.data.products.map(p => ({
+                ...p,
+                price: parseFloat(p.price),
+                stock: parseInt(p.stock, 10)
+            }));
+            staff = result.data.staff;
+            transactions = result.data.transactions || [];
+            categories = result.data.categories || [];
+            
+            renderAll();
+        } else {
+            showToast('Gagal memuat data awal.', 'error');
+        }
+    };
+
+    const renderAll = () => {
+        renderProducts();
+        renderCart();
+        renderStaffDropdown();
+        renderCategoryFilters();
+        populateCategoryDropdown();
+        renderCategoryList();
+    };
+    
     // EVENT HANDLERS & LOGIC
+    const switchPage = (pageName) => {
+        currentPage = pageName;
+        Object.values(pages).forEach(p => p.style.display = 'none');
+        Object.values(navLinks).forEach(l => {
+            l.classList.remove('bg-blue-100');
+            l.querySelector('i').classList.replace('text-blue-600', 'text-gray-500');
+        });
+        
+        pages[pageName].style.display = 'block';
+        if(pageName === 'pos') {
+            pages[pageName].style.display = 'flex';
+        }
+
+        navLinks[pageName].classList.add('bg-blue-100');
+        navLinks[pageName].querySelector('i').classList.replace('text-gray-500', 'text-blue-600');
+
+        const titles = { pos: 'Point of Sale', stock: 'Manajemen Stok', staff: 'Manajemen Staff', dashboard: 'Dashboard' };
+        pageTitle.textContent = titles[pageName];
+        addProductBtn.style.display = (pageName === 'pos' || pageName === 'stock') ? 'flex' : 'none';
+
+        if (pageName === 'stock') renderStockPage();
+        if (pageName === 'staff') renderStaffPage();
+        if (pageName === 'dashboard') renderDashboard();
+    };
+
+    window.addToCart = (productId) => {
+        const product = products.find(p => p.id === productId);
+        const productInCart = cart.find(item => item.id === productId);
+
+        if (product.stock > 0) {
+            if (productInCart) {
+                if (product.stock > productInCart.quantity) {
+                   productInCart.quantity++;
+                } else {
+                    showToast(`Stok ${product.name} tidak mencukupi`, 'error');
+                    return;
+                }
+            } else {
+                cart.push({ id: productId, quantity: 1 });
+            }
+            renderCart();
+        }
+    };
+    
+    window.updateCartQuantity = (productId, change) => {
+        const itemIndex = cart.findIndex(item => item.id === productId);
+        if (itemIndex > -1) {
+            const product = products.find(p => p.id === productId);
+            const newQuantity = cart[itemIndex].quantity + change;
+            
+            if (change > 0 && product.stock <= cart[itemIndex].quantity) {
+                showToast(`Stok ${product.name} tidak mencukupi`, 'error');
+                return;
+            }
+
+            if (newQuantity > 0) {
+                cart[itemIndex].quantity = newQuantity;
+            } else {
+                cart.splice(itemIndex, 1);
+            }
+            renderCart();
+        }
+    };
+
     const handleTransaction = async () => {
         if (cart.length === 0) return;
         if (staff.length > 0 && !staffDropdown.value) {
@@ -770,7 +838,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (result && result.success) {
             showToast('Transaksi berhasil!', 'success');
-            products = result.data.products;
+            products = result.data.products.map(p => ({ ...p, price: parseFloat(p.price), stock: parseInt(p.stock, 10) }));
             transactions.push(transactionData);
             
             cart = [];
@@ -826,7 +894,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await callAppsScript('deleteTransaction', transactionToDelete);
 
             if (result && result.success) {
-                products = result.data.products;
+                products = result.data.products.map(p => ({ ...p, price: parseFloat(p.price), stock: parseInt(p.stock, 10) }));
                 transactions = transactions.filter(t => t.id !== transactionId);
                 
                 renderAll();
@@ -871,7 +939,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const action = id ? 'updateProduct' : 'addProduct';
         const result = await callAppsScript(action, productData);
         if (result && result.success) {
-            products = result.data.products;
+            products = result.data.products.map(p => ({ ...p, price: parseFloat(p.price), stock: parseInt(p.stock, 10) }));
             renderProducts();
             if (currentPage === 'stock') renderStockPage();
             productModal.classList.add('hidden');
@@ -906,7 +974,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await callAppsScript('deleteCategory', { id: categoryId });
             if (result && result.success) {
                 categories = result.data.categories;
-                products = result.data.products;
+                products = result.data.products.map(p => ({ ...p, price: parseFloat(p.price), stock: parseInt(p.stock, 10) }));
                 renderAll();
                 showToast('Kategori berhasil dihapus.', 'success');
             } else {
@@ -954,7 +1022,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (confirm('Apakah Anda yakin ingin menghapus produk ini?')) {
             const result = await callAppsScript('deleteProduct', { id: productId });
             if (result.success) {
-                products = result.data.products;
+                products = result.data.products.map(p => ({ ...p, price: parseFloat(p.price), stock: parseInt(p.stock, 10) }));
                 renderAll();
                 showToast('Produk berhasil dihapus.', 'success');
             } else {
@@ -975,7 +1043,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const result = await callAppsScript('updateStock', payload);
 
         if (result && result.success) {
-            products = result.data.products;
+            products = result.data.products.map(p => ({ ...p, price: parseFloat(p.price), stock: parseInt(p.stock, 10) }));
             renderStockPage();
             if(currentPage === 'pos') renderProducts();
             showToast('Stok berhasil diperbarui.', 'success');
@@ -996,6 +1064,8 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
+
 
 
 
