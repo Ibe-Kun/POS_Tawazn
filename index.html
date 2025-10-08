@@ -11,42 +11,16 @@
         body {
             font-family: 'Inter', sans-serif;
         }
-        /* Custom scrollbar for webkit browsers */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
-        /* Animation for modals and toasts */
-        .fade-in {
-            animation: fadeIn 0.3s ease-out;
-        }
-        .fade-out {
-            animation: fadeOut 0.3s ease-in;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        @keyframes fadeOut {
-            from { opacity: 1; transform: scale(1); }
-            to { opacity: 0; transform: scale(0.95); }
-        }
-        .toast-enter {
-            animation: toastIn 0.5s forwards;
-        }
-        @keyframes toastIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+        .fade-in { animation: fadeIn 0.3s ease-out; }
+        .fade-out { animation: fadeOut 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @keyframes fadeOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.95); } }
+        .toast-enter { animation: toastIn 0.5s forwards; }
+        @keyframes toastIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     </style>
 </head>
 <body class="bg-gray-100 antialiased">
@@ -101,18 +75,51 @@
             <div class="flex-1 p-6 overflow-y-auto">
                 <!-- POS Page -->
                 <div id="pos-page" class="flex flex-col lg:flex-row gap-6">
-                    <!-- Products Grid -->
-                    <div id="product-grid" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 flex-1">
-                        <!-- Product cards will be inserted here by JavaScript -->
+                    <div class="flex-1">
+                        <!-- Category Filters -->
+                        <div id="category-filters" class="flex items-center gap-2 mb-4 flex-wrap">
+                           <!-- Kategori akan dirender di sini oleh JS -->
+                        </div>
+                        <!-- Products Grid -->
+                        <div id="product-grid" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+                            <!-- Product cards will be inserted here by JavaScript -->
+                        </div>
                     </div>
                     <!-- Cart Panel -->
                     <div class="lg:w-96 w-full bg-white rounded-lg shadow p-4 flex flex-col">
                         <h3 class="text-xl font-bold border-b pb-2">Keranjang</h3>
                         <div id="cart-items" class="flex-1 overflow-y-auto my-4 space-y-3">
-                            <!-- Cart items will be inserted here -->
                             <p class="text-gray-500 text-center">Keranjang Anda kosong.</p>
                         </div>
                         <div class="border-t pt-4 space-y-4">
+                            <!-- Discount Section -->
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium text-gray-600">Diskon</label>
+                                <div class="flex gap-2">
+                                    <select id="discount-type" class="border rounded-md px-2 py-1 text-sm">
+                                        <option value="percent">Persen (%)</option>
+                                        <option value="fixed">Nominal (Rp)</option>
+                                    </select>
+                                    <input type="number" id="discount-value" placeholder="0" class="flex-grow border rounded-md px-2 py-1 text-sm">
+                                </div>
+                                <button id="apply-discount-btn" class="w-full bg-indigo-500 text-white py-1 rounded-md text-sm hover:bg-indigo-600">Terapkan Diskon</button>
+                            </div>
+                            <!-- Totals -->
+                            <div class="space-y-1">
+                                <div class="flex justify-between items-center text-gray-600">
+                                    <span>Subtotal</span>
+                                    <span id="cart-subtotal">Rp 0</span>
+                                </div>
+                                <div id="discount-display" class="flex justify-between items-center text-red-500 hidden">
+                                    <span>Diskon <button id="remove-discount-btn" class="ml-1 font-bold">&times;</button></span>
+                                    <span id="cart-discount">- Rp 0</span>
+                                </div>
+                                <div class="flex justify-between items-center font-bold text-lg">
+                                    <span>Total</span>
+                                    <span id="cart-total">Rp 0</span>
+                                </div>
+                            </div>
+
                             <div>
                                 <label for="customer-name" class="text-sm font-medium text-gray-600">Nama Pelanggan</label>
                                 <input type="text" id="customer-name" placeholder="Opsional" class="mt-1 w-full border rounded-md px-2 py-2 text-sm">
@@ -130,10 +137,6 @@
                                     <!-- Staff options will be inserted here -->
                                 </select>
                             </div>
-                            <div class="flex justify-between items-center font-bold text-lg">
-                                <span>Total</span>
-                                <span id="cart-total">Rp 0</span>
-                            </div>
                             <button id="complete-transaction-btn" class="w-full bg-green-500 text-white py-3 rounded-lg font-bold hover:bg-green-600 transition duration-300 disabled:bg-gray-400">
                                 Selesaikan Transaksi
                             </button>
@@ -148,6 +151,7 @@
                             <thead class="bg-gray-50">
                                 <tr>
                                     <th class="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produk</th>
+                                    <th class="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori</th>
                                     <th class="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stok Saat Ini</th>
                                     <th class="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Update Stok</th>
                                 </tr>
@@ -178,80 +182,7 @@
 
                 <!-- Dashboard Page -->
                 <div id="dashboard-page" class="hidden space-y-6">
-                        <!-- Filter and Stats -->
-                    <div class="flex flex-wrap justify-between items-center gap-4">
-                        <h3 class="text-xl font-bold text-gray-700">Ringkasan Penjualan</h3>
-                        <div class="flex items-center gap-2">
-                            <select id="dashboard-filter" class="border rounded-md px-3 py-2">
-                                <option value="today">Hari Ini</option>
-                                <option value="7days">7 Hari Terakhir</option>
-                                <option value="30days">30 Hari Terakhir</option>
-                                <option value="3months">3 Bulan Terakhir</option>
-                                <option value="6months">6 Bulan Terakhir</option>
-                                <option value="1year">1 Tahun Terakhir</option>
-                                <option value="all">Semua</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="bg-white p-6 rounded-lg shadow flex items-center">
-                            <div class="bg-blue-100 rounded-full p-3 mr-4">
-                               <i class="fas fa-dollar-sign text-blue-600 text-2xl"></i>
-                            </div>
-                            <div>
-                                <p class="text-gray-500">Total Pendapatan</p>
-                                <p id="stats-revenue" class="text-2xl font-bold">Rp 0</p>
-                            </div>
-                        </div>
-                         <div class="bg-white p-6 rounded-lg shadow flex items-center">
-                            <div class="bg-green-100 rounded-full p-3 mr-4">
-                               <i class="fas fa-receipt text-green-600 text-2xl"></i>
-                            </div>
-                            <div>
-                                <p class="text-gray-500">Jumlah Transaksi</p>
-                                <p id="stats-transactions" class="text-2xl font-bold">0</p>
-                            </div>
-                        </div>
-                         <div class="bg-yellow-100 rounded-lg shadow p-6 flex items-center">
-                           <div class="bg-yellow-100 rounded-full p-3 mr-4">
-                               <i class="fas fa-box text-yellow-600 text-2xl"></i>
-                            </div>
-                            <div>
-                                <p class="text-gray-500">Produk Terjual</p>
-                                <p id="stats-products-sold" class="text-2xl font-bold">0</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Best Sellers and Transaction History -->
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div class="lg:col-span-1 bg-white p-6 rounded-lg shadow">
-                            <h4 class="text-lg font-bold mb-4">Produk Terlaris</h4>
-                            <ul id="best-sellers-list" class="space-y-3">
-                                <!-- Best seller items -->
-                            </ul>
-                        </div>
-                        <div class="lg:col-span-2 bg-white rounded-lg shadow overflow-hidden">
-                            <h4 class="text-lg font-bold p-6">Riwayat Transaksi</h4>
-                            <div class="overflow-x-auto">
-                                <table class="min-w-full">
-                                    <thead class="bg-gray-50">
-                                        <tr>
-                                            <th class="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th>
-                                            <th class="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase">Pelanggan</th>
-                                            <th class="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase">Staff</th>
-                                            <th class="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
-                                            <th class="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase">Metode</th>
-                                            <th class="py-3 px-6 text-center text-xs font-medium text-gray-500 uppercase">Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="transaction-history" class="bg-white divide-y divide-gray-200">
-                                        <!-- History items -->
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+                    <!-- Dashboard content -->
                 </div>
             </div>
         </main>
@@ -267,6 +198,12 @@
                     <div>
                         <label for="product-name" class="block text-sm font-medium text-gray-700">Nama Produk</label>
                         <input type="text" id="product-name" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label for="product-category" class="block text-sm font-medium text-gray-700">Kategori</label>
+                        <select id="product-category" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            <!-- Kategori options akan diisi oleh JS -->
+                        </select>
                     </div>
                     <div>
                         <label for="product-price" class="block text-sm font-medium text-gray-700">Harga</label>
@@ -288,26 +225,45 @@
             </form>
         </div>
     </div>
+    
+    <!-- Category Management Modal -->
+    <div id="category-modal" class="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center hidden fade-in">
+        <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
+            <h2 class="text-2xl font-bold mb-6">Kelola Kategori</h2>
+            <div class="space-y-4">
+                <form id="add-category-form" class="flex items-center gap-2">
+                    <input type="text" id="new-category-name" placeholder="Nama Kategori Baru" required class="flex-grow border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700">Tambah</button>
+                </form>
+                <div class="border-t pt-4">
+                    <h3 class="text-lg font-medium mb-2">Daftar Kategori</h3>
+                    <ul id="category-list" class="divide-y divide-gray-200 h-48 overflow-y-auto">
+                       <!-- Daftar kategori akan diisi oleh JS -->
+                    </ul>
+                </div>
+            </div>
+             <div class="mt-8 flex justify-end">
+                <button type="button" id="close-category-modal-btn" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300">Tutup</button>
+            </div>
+        </div>
+    </div>
+
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // =================================================================================
-    // CONFIGURATION
-    // =================================================================================
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzM61wzY529OoM7aJiNwzwGey0aQnIjxxuneYAMf4kLqg6mJL0bx_zbXQx_4vwZBrmA/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfnsr36g91-jgvPydQHS5-6kRkWUV96FjWqcnDAuW9gpiNbMTrIwcB2Sb2AEgzjsY/exec';
 
-    // =================================================================================
-    // STATE MANAGEMENT
-    // =================================================================================
+    // STATE
     let products = [];
     let cart = [];
     let transactions = [];
     let staff = [];
+    let categories = [];
     let currentPage = 'pos';
+    let activeCategory = 'all';
+    let discount = { type: 'none', value: 0 };
 
-    // =================================================================================
     // DOM ELEMENTS
-    // =================================================================================
     const loadingOverlay = document.getElementById('loading-overlay');
     const pageTitle = document.getElementById('page-title');
     const pages = {
@@ -324,7 +280,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     const productGrid = document.getElementById('product-grid');
     const cartItemsContainer = document.getElementById('cart-items');
+    const cartSubtotalEl = document.getElementById('cart-subtotal');
+    const cartDiscountEl = document.getElementById('cart-discount');
     const cartTotalEl = document.getElementById('cart-total');
+    const discountDisplay = document.getElementById('discount-display');
     const completeTransactionBtn = document.getElementById('complete-transaction-btn');
     const addProductBtn = document.getElementById('add-product-btn');
     const productModal = document.getElementById('product-modal');
@@ -336,14 +295,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const addStaffForm = document.getElementById('add-staff-form');
     const staffDropdown = document.getElementById('staff-dropdown');
     const customerNameInput = document.getElementById('customer-name');
-    const dashboardFilter = document.getElementById('dashboard-filter');
+    const categoryFilters = document.getElementById('category-filters');
+    const productCategorySelect = document.getElementById('product-category');
+    const categoryModal = document.getElementById('category-modal');
+    const closeCategoryModalBtn = document.getElementById('close-category-modal-btn');
+    const addCategoryForm = document.getElementById('add-category-form');
+    const categoryList = document.getElementById('category-list');
+    const discountTypeEl = document.getElementById('discount-type');
+    const discountValueEl = document.getElementById('discount-value');
+    const applyDiscountBtn = document.getElementById('apply-discount-btn');
+    const removeDiscountBtn = document.getElementById('remove-discount-btn');
 
-    // =================================================================================
-    // UTILITY & HELPER FUNCTIONS
-    // =================================================================================
-    
+
+    // UTILITY FUNCTIONS
     const formatCurrency = (amount) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
-    
     const showLoader = () => loadingOverlay.style.display = 'flex';
     const hideLoader = () => loadingOverlay.style.display = 'none';
 
@@ -351,29 +316,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const toastContainer = document.getElementById('toast-container');
         const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
         const icon = type === 'success' ? 'fa-check-circle' : 'fa-times-circle';
-
         const toast = document.createElement('div');
         toast.className = `toast-enter text-white px-6 py-4 rounded-md shadow-lg flex items-center ${bgColor}`;
         toast.innerHTML = `<i class="fas ${icon} mr-3"></i><p>${message}</p>`;
-        
         toastContainer.appendChild(toast);
-
-        setTimeout(() => {
-            toast.remove();
-        }, 3000);
+        setTimeout(() => toast.remove(), 3000);
     };
 
-    // =================================================================================
     // RENDER FUNCTIONS
-    // =================================================================================
-
     const renderProducts = () => {
         productGrid.innerHTML = '';
-        if (products.length === 0) {
-            productGrid.innerHTML = '<p class="text-gray-500 col-span-full text-center">Belum ada produk. Silakan tambahkan produk baru.</p>';
+        const filteredProducts = activeCategory === 'all' 
+            ? products 
+            : products.filter(p => p.category === activeCategory);
+
+        if (filteredProducts.length === 0) {
+            productGrid.innerHTML = '<p class="text-gray-500 col-span-full text-center">Tidak ada produk dalam kategori ini.</p>';
             return;
         }
-        products.forEach(p => {
+        filteredProducts.forEach(p => {
             const disabled = p.stock <= 0 ? 'disabled' : '';
             const card = document.createElement('div');
             card.className = 'bg-white rounded-lg shadow p-4 flex flex-col relative';
@@ -389,6 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <img src="${p.image}" alt="${p.name}" class="w-full h-32 object-cover rounded-md mb-4" onerror="this.onerror=null;this.src='https://placehold.co/300x200/e2e8f0/adb5bd?text=Gambar\\nTdk\\nTersedia';">
                 <h4 class="text-md font-bold text-gray-800 flex-1">${p.name}</h4>
+                <p class="text-sm text-gray-500">${p.category || 'Tanpa Kategori'}</p>
                 <p class="text-gray-600">${formatCurrency(p.price)}</p>
                 <p class="text-sm ${p.stock > 5 ? 'text-green-600' : 'text-red-600'}">Stok: ${p.stock}</p>
                 <button ${disabled} onclick="addToCart('${p.id}')" class="mt-4 w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed">
@@ -398,22 +360,35 @@ document.addEventListener('DOMContentLoaded', () => {
             productGrid.appendChild(card);
         });
     };
-    
+
     const renderCart = () => {
         if (cart.length === 0) {
             cartItemsContainer.innerHTML = '<p class="text-gray-500 text-center">Keranjang Anda kosong.</p>';
+            cartSubtotalEl.textContent = formatCurrency(0);
             cartTotalEl.textContent = formatCurrency(0);
+            discountDisplay.classList.add('hidden');
             completeTransactionBtn.disabled = true;
             return;
         }
 
         cartItemsContainer.innerHTML = '';
-        let total = 0;
+        const subtotal = cart.reduce((sum, item) => {
+            const product = products.find(p => p.id === item.id);
+            return sum + (product.price * item.quantity);
+        }, 0);
+
+        let discountAmount = 0;
+        if (discount.type === 'percent') {
+            discountAmount = subtotal * (discount.value / 100);
+        } else if (discount.type === 'fixed') {
+            discountAmount = discount.value;
+        }
+        
+        const total = Math.max(0, subtotal - discountAmount);
+
         cart.forEach(item => {
             const product = products.find(p => p.id === item.id);
-            if (!product) return; // Skip if product not found
-            total += product.price * item.quantity;
-
+            if (!product) return;
             const cartItemEl = document.createElement('div');
             cartItemEl.className = 'flex justify-between items-center';
             cartItemEl.innerHTML = `
@@ -433,14 +408,21 @@ document.addEventListener('DOMContentLoaded', () => {
             cartItemsContainer.appendChild(cartItemEl);
         });
 
+        cartSubtotalEl.textContent = formatCurrency(subtotal);
+        if (discount.type !== 'none' && discount.value > 0) {
+            cartDiscountEl.textContent = `- ${formatCurrency(discountAmount)}`;
+            discountDisplay.classList.remove('hidden');
+        } else {
+            discountDisplay.classList.add('hidden');
+        }
         cartTotalEl.textContent = formatCurrency(total);
         completeTransactionBtn.disabled = false;
     };
-    
+
     const renderStockPage = () => {
         stockListContainer.innerHTML = '';
         if (products.length === 0) {
-            stockListContainer.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-500">Belum ada produk.</td></tr>';
+            stockListContainer.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-500">Belum ada produk.</td></tr>';
             return;
         }
         products.forEach(p => {
@@ -456,10 +438,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </div>
                 </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${p.category || '-'}</td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${p.stock > 5 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-                        ${p.stock}
-                    </span>
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${p.stock > 5 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${p.stock}</span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <div class="flex items-center">
@@ -473,6 +454,121 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
     
+    const renderCategoryFilters = () => {
+        categoryFilters.innerHTML = '';
+        const createButton = (name, value) => {
+            const btn = document.createElement('button');
+            btn.textContent = name;
+            btn.dataset.category = value;
+            const isActive = activeCategory === value;
+            btn.className = `px-3 py-1 text-sm font-medium rounded-full ${isActive ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-200'}`;
+            btn.addEventListener('click', () => {
+                activeCategory = value;
+                renderCategoryFilters();
+                renderProducts();
+            });
+            return btn;
+        };
+        
+        categoryFilters.appendChild(createButton('Semua Produk', 'all'));
+        categories.forEach(cat => categoryFilters.appendChild(createButton(cat.name, cat.name)));
+
+        const manageBtn = document.createElement('button');
+        manageBtn.innerHTML = `<i class="fas fa-plus mr-1"></i> Kelola Kategori`;
+        manageBtn.className = 'px-3 py-1 text-sm font-medium rounded-full bg-gray-600 text-white hover:bg-gray-700';
+        manageBtn.addEventListener('click', () => categoryModal.classList.remove('hidden'));
+        categoryFilters.appendChild(manageBtn);
+    };
+
+    const populateCategoryDropdown = () => {
+        productCategorySelect.innerHTML = '<option value="">Pilih Kategori...</option>';
+        categories.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat.name;
+            option.textContent = cat.name;
+            productCategorySelect.appendChild(option);
+        });
+    };
+
+    const renderCategoryList = () => {
+        categoryList.innerHTML = '';
+        if (categories.length === 0) {
+            categoryList.innerHTML = '<li class="px-3 py-2 text-center text-gray-500">Belum ada kategori.</li>';
+            return;
+        }
+        categories.forEach(cat => {
+            const li = document.createElement('li');
+            li.className = 'px-3 py-2 flex justify-between items-center';
+            li.innerHTML = `
+                <span>${cat.name}</span>
+                <button data-id="${cat.id}" class="text-red-500 hover:text-red-700"><i class="fas fa-trash-alt"></i></button>
+            `;
+            li.querySelector('button').addEventListener('click', (e) => handleDeleteCategory(e.currentTarget.dataset.id));
+            categoryList.appendChild(li);
+        });
+    };
+
+    // API CALLS
+    const callAppsScript = async (action, payload) => {
+        if (!SCRIPT_URL) {
+            showToast('URL Google Apps Script belum diatur!', 'error');
+            return { success: false, message: 'URL script belum diatur!' };
+        }
+        showLoader();
+        try {
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'cors',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action, payload })
+            });
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            return await response.json();
+        } catch (error) {
+            console.error('Error calling Apps Script:', error);
+            showToast('Gagal terhubung ke backend.', 'error');
+            return { success: false, error: error.message };
+        } finally {
+            hideLoader();
+        }
+    };
+
+    const loadInitialData = async () => {
+        const result = await callAppsScript('getInitialData');
+        if (result && result.success) {
+            products = result.data.products;
+            staff = result.data.staff;
+            transactions = result.data.transactions || [];
+            categories = result.data.categories || [];
+            
+            renderAll();
+        } else {
+            showToast('Gagal memuat data awal.', 'error');
+        }
+    };
+
+    const renderAll = () => {
+        renderProducts();
+        renderCart();
+        renderStaffDropdown();
+        renderCategoryFilters();
+        populateCategoryDropdown();
+        renderCategoryList();
+    };
+    
+    const renderStaffDropdown = () => {
+        staffDropdown.innerHTML = '';
+        if (staff.length === 0) {
+            staffDropdown.innerHTML = '<option value="">-</option>';
+        }
+        staff.forEach(s => {
+            const option = document.createElement('option');
+            option.value = s.name;
+            option.textContent = s.name;
+            staffDropdown.appendChild(option);
+        });
+    };
+
     const renderStaffPage = () => {
         staffListContainer.innerHTML = '';
         if(staff.length === 0) {
@@ -490,65 +586,112 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    const renderStaffDropdown = () => {
-        staffDropdown.innerHTML = '';
-        if (staff.length === 0) {
-            staffDropdown.innerHTML = '<option value="">-</option>';
-        }
-        staff.forEach(s => {
-            const option = document.createElement('option');
-            option.value = s.name;
-            option.textContent = s.name;
-            staffDropdown.appendChild(option);
-        });
-    };
-
     const renderDashboard = () => {
-        const filter = dashboardFilter.value;
+        const dashboardPage = document.getElementById('dashboard-page');
+        dashboardPage.innerHTML = `
+            <div class="space-y-6">
+                <div class="flex flex-wrap justify-between items-center gap-4">
+                    <h3 class="text-xl font-bold text-gray-700">Ringkasan Penjualan</h3>
+                    <div class="flex items-center gap-2">
+                        <select id="dashboard-filter-select" class="border rounded-md px-3 py-2">
+                            <option value="today">Hari Ini</option>
+                            <option value="7days">7 Hari Terakhir</option>
+                            <option value="30days">30 Hari Terakhir</option>
+                            <option value="all">Semua</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow flex items-center">
+                        <div class="bg-blue-100 rounded-full p-3 mr-4">
+                           <i class="fas fa-dollar-sign text-blue-600 text-2xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-gray-500">Total Pendapatan</p>
+                            <p id="stats-revenue" class="text-2xl font-bold">Rp 0</p>
+                        </div>
+                    </div>
+                     <div class="bg-white p-6 rounded-lg shadow flex items-center">
+                        <div class="bg-green-100 rounded-full p-3 mr-4">
+                           <i class="fas fa-receipt text-green-600 text-2xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-gray-500">Jumlah Transaksi</p>
+                            <p id="stats-transactions" class="text-2xl font-bold">0</p>
+                        </div>
+                    </div>
+                     <div class="bg-white p-6 rounded-lg shadow flex items-center">
+                       <div class="bg-yellow-100 rounded-full p-3 mr-4">
+                           <i class="fas fa-box text-yellow-600 text-2xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-gray-500">Produk Terjual</p>
+                            <p id="stats-products-sold" class="text-2xl font-bold">0</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-1 bg-white p-6 rounded-lg shadow">
+                        <h4 class="text-lg font-bold mb-4">Produk Terlaris</h4>
+                        <ul id="best-sellers-list" class="space-y-3"></ul>
+                    </div>
+                    <div class="lg:col-span-2 bg-white rounded-lg shadow overflow-hidden">
+                        <h4 class="text-lg font-bold p-6">Riwayat Transaksi</h4>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th>
+                                        <th class="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase">Pelanggan</th>
+                                        <th class="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase">Staff</th>
+                                        <th class="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                                        <th class="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase">Metode</th>
+                                        <th class="py-3 px-6 text-center text-xs font-medium text-gray-500 uppercase">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="transaction-history" class="bg-white divide-y divide-gray-200"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        
+        const filterEl = dashboardPage.querySelector('#dashboard-filter-select');
+        if(filterEl) {
+            filterEl.addEventListener('change', updateDashboardStats);
+        }
+        updateDashboardStats();
+    };
+    
+    function updateDashboardStats() {
+        const filterValue = document.getElementById('dashboard-filter-select').value;
         const now = new Date();
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        
         let filteredTransactions = transactions;
 
-        if (filter === 'today') {
-            filteredTransactions = transactions.filter(t => new Date(t.date) >= today);
-        } else if (filter === '7days') {
+        if (filterValue === '7days') {
             const sevenDaysAgo = new Date(today);
             sevenDaysAgo.setDate(today.getDate() - 7);
             filteredTransactions = transactions.filter(t => new Date(t.date) >= sevenDaysAgo);
-        } else if (filter === '30days') {
-             const thirtyDaysAgo = new Date(today);
-             thirtyDaysAgo.setDate(today.getDate() - 30);
-             filteredTransactions = transactions.filter(t => new Date(t.date) >= thirtyDaysAgo);
-        } else if (filter === '3months') {
-            const threeMonthsAgo = new Date(now);
-            threeMonthsAgo.setMonth(now.getMonth() - 3);
-            filteredTransactions = transactions.filter(t => new Date(t.date) >= threeMonthsAgo);
-        } else if (filter === '6months') {
-            const sixMonthsAgo = new Date(now);
-            sixMonthsAgo.setMonth(now.getMonth() - 6);
-            filteredTransactions = transactions.filter(t => new Date(t.date) >= sixMonthsAgo);
-        } else if (filter === '1year') {
-            const oneYearAgo = new Date(now);
-            oneYearAgo.setFullYear(now.getFullYear() - 1);
-            filteredTransactions = transactions.filter(t => new Date(t.date) >= oneYearAgo);
-        } else if (filter === 'all') {
-            filteredTransactions = transactions; // No filter
+        } else if (filterValue === '30days') {
+            const thirtyDaysAgo = new Date(today);
+            thirtyDaysAgo.setDate(today.getDate() - 30);
+            filteredTransactions = transactions.filter(t => new Date(t.date) >= thirtyDaysAgo);
+        } else if (filterValue === 'today') {
+             filteredTransactions = transactions.filter(t => new Date(t.date) >= today);
         }
-        
-        // Stats
-        const totalRevenue = filteredTransactions.reduce((sum, t) => sum + t.total, 0);
+
+        const totalRevenue = filteredTransactions.reduce((sum, t) => sum + (t.total || 0), 0);
         const totalTransactions = filteredTransactions.length;
-        const totalProductsSold = filteredTransactions.reduce((sum, t) => sum + t.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
+        const totalProductsSold = filteredTransactions.reduce((sum, t) => sum + (t.items || []).reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
         
         document.getElementById('stats-revenue').textContent = formatCurrency(totalRevenue);
         document.getElementById('stats-transactions').textContent = totalTransactions;
         document.getElementById('stats-products-sold').textContent = totalProductsSold;
 
-        // Best Sellers
         const productSales = {};
         filteredTransactions.forEach(t => {
-            t.items.forEach(item => {
+            (t.items || []).forEach(item => {
                 if (!productSales[item.id]) {
                     const product = products.find(p => p.id === item.id);
                     productSales[item.id] = { name: product ? product.name : 'Produk Dihapus', quantity: 0 };
@@ -559,177 +702,35 @@ document.addEventListener('DOMContentLoaded', () => {
         const sortedProducts = Object.values(productSales).sort((a, b) => b.quantity - a.quantity).slice(0, 5);
         const bestSellersList = document.getElementById('best-sellers-list');
         bestSellersList.innerHTML = '';
-        if (sortedProducts.length === 0) {
-            bestSellersList.innerHTML = '<p class="text-gray-500">Tidak ada data penjualan.</p>';
-        } else {
-            sortedProducts.forEach(p => {
-                const li = document.createElement('li');
-                li.className = 'flex justify-between items-center';
-                li.innerHTML = `<span>${p.name}</span> <span class="font-bold">${p.quantity} terjual</span>`;
-                bestSellersList.appendChild(li);
-            });
-        }
-        
-        // Transaction History
+        sortedProducts.forEach(p => {
+            const li = document.createElement('li');
+            li.className = 'flex justify-between items-center';
+            li.innerHTML = `<span>${p.name}</span> <span class="font-bold">${p.quantity} terjual</span>`;
+            bestSellersList.appendChild(li);
+        });
+
         const transactionHistory = document.getElementById('transaction-history');
         transactionHistory.innerHTML = '';
-        if (filteredTransactions.length === 0) {
-            transactionHistory.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">Tidak ada transaksi.</td></tr>';
-        } else {
-            filteredTransactions.slice().reverse().forEach(t => { // Show newest first
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="px-6 py-4 text-sm text-gray-900">${new Date(t.date).toLocaleString('id-ID')}</td>
-                    <td class="px-6 py-4 text-sm text-gray-500">${t.customerName || '-'}</td>
-                    <td class="px-6 py-4 text-sm text-gray-500">${t.staffName || '-'}</td>
-                    <td class="px-6 py-4 text-sm text-gray-900 font-semibold">${formatCurrency(t.total)}</td>
-                    <td class="px-6 py-4 text-sm text-gray-500">${t.paymentMethod}</td>
-                    <td class="px-6 py-4 text-sm text-center">
-                        <button onclick="handleDeleteTransaction('${t.id}')" class="text-red-500 hover:text-red-700">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </td>
-                `;
-                transactionHistory.appendChild(row);
-            });
-        }
-    };
-    
-    // =================================================================================
-    // API CALLS (Google Apps Script)
-    // =================================================================================
-    const callAppsScript = async (action, payload) => {
-        if (!SCRIPT_URL) {
-            showToast('URL Google Apps Script belum diatur!', 'error');
-            console.error("SCRIPT_URL is not set.");
-            return { success: false, message: 'URL Google Apps Script belum diatur!' };
-        }
-        
-        showLoader();
-        try {
-            const response = await fetch(SCRIPT_URL, {
-                method: 'POST',
-                mode: 'cors',
-                headers: {
-                  'Content-Type': 'text/plain;charset=utf-8',
-                },
-                body: JSON.stringify({ action, payload })
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const result = await response.json();
-            return result;
-        } catch (error) {
-            console.error('Error calling Apps Script:', error);
-            showToast('Gagal terhubung ke backend.', 'error');
-            // Menambahkan log ini untuk membantu user melakukan debug
-            console.log("Tips: Pastikan Google Apps Script sudah di-deploy ulang (Deploy > Manage deployments > Edit > New version > Deploy) dengan akses diatur ke 'Siapa saja' (Anyone).");
-            return { success: false, error: error.message };
-        } finally {
-            hideLoader();
-        }
-    };
-
-    const loadInitialData = async () => {
-        const result = await callAppsScript('getInitialData');
-        if (result && result.success) {
-            products = result.data.products;
-            staff = result.data.staff;
-            transactions = result.data.transactions || []; // Get transactions from server
-            
-            renderProducts();
-            renderCart();
-            renderStaffDropdown();
-        } else {
-            // Use mock data if backend fails
-            console.warn("Could not fetch from backend. Using mock data.");
-            products = [
-                { id: 'prod1', name: 'Kopi Susu Gula Aren', price: 18000, stock: 20, image: 'https://placehold.co/300x200/663300/FFFFFF?text=Kopi+Susu' },
-                { id: 'prod2', name: 'Croissant Cokelat', price: 22000, stock: 15, image: 'https://placehold.co/300x200/D2691E/FFFFFF?text=Croissant' },
-                { id: 'prod3', name: 'Matcha Latte', price: 25000, stock: 0, image: 'https://placehold.co/300x200/3CB371/FFFFFF?text=Matcha' }
-            ];
-            staff = [
-                { id: 'staff1', name: 'Andi' },
-                { id: 'staff2', name: 'Bunga' }
-            ];
-            transactions = [];
-            renderProducts();
-            renderStaffDropdown();
-        }
-    };
-    
-    // =================================================================================
-    // EVENT HANDLERS & LOGIC
-    // =================================================================================
-    const switchPage = (pageName) => {
-        currentPage = pageName;
-        Object.values(pages).forEach(page => page.style.display = 'none');
-        Object.values(navLinks).forEach(link => {
-            link.classList.remove('bg-blue-100');
-            link.querySelector('i').classList.replace('text-blue-600', 'text-gray-500');
+        filteredTransactions.slice().reverse().forEach(t => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="px-6 py-4 text-sm text-gray-900">${new Date(t.date).toLocaleString('id-ID')}</td>
+                <td class="px-6 py-4 text-sm text-gray-500">${t.customerName || '-'}</td>
+                <td class="px-6 py-4 text-sm text-gray-500">${t.staffName || '-'}</td>
+                <td class="px-6 py-4 text-sm text-gray-900 font-semibold">${formatCurrency(t.total)}</td>
+                <td class="px-6 py-4 text-sm text-gray-500">${t.paymentMethod}</td>
+                <td class="px-6 py-4 text-sm text-center">
+                    <button onclick="handleDeleteTransaction('${t.id}')" class="text-red-500 hover:text-red-700">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </td>
+            `;
+            transactionHistory.appendChild(row);
         });
-        
-        pages[pageName].style.display = pages[pageName].id.includes('page') ? 'block' : 'flex';
-        navLinks[pageName].classList.add('bg-blue-100');
-        navLinks[pageName].querySelector('i').classList.replace('text-gray-500', 'text-blue-600');
+    }
 
-        const titles = {
-            pos: 'Point of Sale',
-            stock: 'Manajemen Stok',
-            staff: 'Manajemen Staff',
-            dashboard: 'Dashboard'
-        };
-        pageTitle.textContent = titles[pageName];
 
-        addProductBtn.style.display = (pageName === 'pos' || pageName === 'stock') ? 'flex' : 'none';
-
-        if (pageName === 'stock') renderStockPage();
-        if (pageName === 'staff') renderStaffPage();
-        if (pageName === 'dashboard') renderDashboard();
-    };
-    
-    window.addToCart = (productId) => {
-        const product = products.find(p => p.id === productId);
-        const productInCart = cart.find(item => item.id === productId);
-
-        if (product.stock > 0) {
-            if (productInCart) {
-                if (product.stock > productInCart.quantity) {
-                   productInCart.quantity++;
-                } else {
-                    showToast(`Stok ${product.name} tidak mencukupi`, 'error');
-                    return;
-                }
-            } else {
-                cart.push({ id: productId, quantity: 1 });
-            }
-            renderCart();
-        }
-    };
-    
-    window.updateCartQuantity = (productId, change) => {
-        const itemIndex = cart.findIndex(item => item.id === productId);
-        if (itemIndex > -1) {
-            const product = products.find(p => p.id === productId);
-            const newQuantity = cart[itemIndex].quantity + change;
-            
-            if (change > 0 && product.stock <= cart[itemIndex].quantity) {
-                showToast(`Stok ${product.name} tidak mencukupi`, 'error');
-                return;
-            }
-
-            if (newQuantity > 0) {
-                cart[itemIndex].quantity = newQuantity;
-            } else {
-                cart.splice(itemIndex, 1);
-            }
-            renderCart();
-        }
-    };
-
+    // EVENT HANDLERS & LOGIC
     const handleTransaction = async () => {
         if (cart.length === 0) return;
         if (staff.length > 0 && !staffDropdown.value) {
@@ -737,15 +738,28 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const total = cart.reduce((sum, item) => {
+        const subtotal = cart.reduce((sum, item) => {
             const product = products.find(p => p.id === item.id);
             return sum + (product.price * item.quantity);
         }, 0);
-
+        
+        let discountAmount = 0;
+        if (discount.type === 'percent') {
+            discountAmount = subtotal * (discount.value / 100);
+        } else if (discount.type === 'fixed') {
+            discountAmount = discount.value;
+        }
+        
+        const total = Math.max(0, subtotal - discountAmount);
+        
         const transactionData = {
             id: 'trx-' + Date.now(),
             items: cart,
-            total,
+            total: total,
+            subtotal: subtotal,
+            discountType: discount.type,
+            discountValue: discount.value,
+            discountAmount: discountAmount,
             paymentMethod: document.getElementById('payment-method').value,
             staffName: staffDropdown.value,
             customerName: customerNameInput.value.trim(),
@@ -757,8 +771,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (result && result.success) {
             showToast('Transaksi berhasil!', 'success');
             products = result.data.products;
-            transactions.push(transactionData); // Update local state for immediate UI feedback
+            transactions.push(transactionData);
+            
             cart = [];
+            discount = { type: 'none', value: 0 };
+            discountValueEl.value = '';
             customerNameInput.value = '';
 
             renderProducts();
@@ -768,80 +785,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
-    const showProductModal = (product = null) => {
-        productForm.reset();
-        document.getElementById('product-id').value = '';
-
-        if (product) {
-            modalTitle.textContent = 'Edit Produk';
-            document.getElementById('product-id').value = product.id;
-            document.getElementById('product-name').value = product.name;
-            document.getElementById('product-price').value = product.price;
-            document.getElementById('product-stock').value = product.stock;
-            document.getElementById('product-image').value = product.image;
-        } else {
-            modalTitle.textContent = 'Tambah Produk Baru';
-        }
-        productModal.classList.remove('hidden');
-    };
-
-    const hideProductModal = () => {
-        productModal.classList.add('hidden');
-    };
-
-    const handleFormSubmit = async (e) => {
-        e.preventDefault();
-        const id = document.getElementById('product-id').value;
-        const productData = {
-            id: id || 'prod-' + Date.now(),
-            name: document.getElementById('product-name').value,
-            price: parseFloat(document.getElementById('product-price').value),
-            stock: parseInt(document.getElementById('product-stock').value, 10),
-            image: document.getElementById('product-image').value
-        };
-
-        const action = id ? 'updateProduct' : 'addProduct';
-        const result = await callAppsScript(action, productData);
-        
-        if (result && result.success) {
-            products = result.data.products;
-            renderProducts();
-            if (currentPage === 'stock') renderStockPage();
-            hideProductModal();
-            showToast(`Produk berhasil ${id ? 'diperbarui' : 'ditambahkan'}!`, 'success');
-        } else {
-            showToast(result.message || 'Gagal menyimpan produk.', 'error');
-        }
-    };
-    
-    window.handleEditProduct = (productId) => {
-        const product = products.find(p => p.id === productId);
-        if (product) showProductModal(product);
-    };
-
-    window.handleDeleteProduct = async (productId) => {
-        if (confirm(`Apakah Anda yakin ingin menghapus produk ini?`)) {
-            const result = await callAppsScript('deleteProduct', { id: productId });
-            if (result && result.success) {
-                products = result.data.products;
-                renderProducts();
-                if (currentPage === 'stock') renderStockPage();
-                showToast('Produk berhasil dihapus.', 'success');
-            } else {
-                showToast(result.message || 'Gagal menghapus produk.', 'error');
-            }
-        }
-    };
-    
     const handleAddStaff = async (e) => {
         e.preventDefault();
         const newStaffNameInput = document.getElementById('new-staff-name');
-        const newStaffName = newStaffNameInput.value.trim();
-        if(!newStaffName) return;
+        const name = newStaffNameInput.value.trim();
+        if (!name) return;
 
-        const staffData = { id: 'staff-' + Date.now(), name: newStaffName };
-        const result = await callAppsScript('addStaff', staffData);
-        if(result && result.success) {
+        const payload = { id: 'staff-' + Date.now(), name };
+        const result = await callAppsScript('addStaff', payload);
+        if (result && result.success) {
             staff = result.data.staff;
             renderStaffPage();
             renderStaffDropdown();
@@ -853,7 +805,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.handleDeleteStaff = async (staffId) => {
-        if (confirm(`Apakah Anda yakin ingin menghapus staff ini?`)) {
+        if (confirm('Apakah Anda yakin ingin menghapus staff ini?')) {
             const result = await callAppsScript('deleteStaff', { id: staffId });
             if (result && result.success) {
                 staff = result.data.staff;
@@ -862,6 +814,151 @@ document.addEventListener('DOMContentLoaded', () => {
                 showToast('Staff berhasil dihapus.', 'success');
             } else {
                 showToast(result.message || 'Gagal menghapus staff.', 'error');
+            }
+        }
+    };
+
+    window.handleDeleteTransaction = async (transactionId) => {
+        if (confirm('Apakah Anda yakin ingin menghapus transaksi ini? Stok produk akan dikembalikan.')) {
+            const transactionToDelete = transactions.find(t => t.id === transactionId);
+            if (!transactionToDelete) return;
+
+            const result = await callAppsScript('deleteTransaction', transactionToDelete);
+
+            if (result && result.success) {
+                products = result.data.products;
+                transactions = transactions.filter(t => t.id !== transactionId);
+                
+                renderAll();
+                if(currentPage === 'dashboard') renderDashboard();
+
+                showToast('Transaksi berhasil dibatalkan.', 'success');
+            } else {
+                showToast(result.message || 'Gagal membatalkan transaksi.', 'error');
+            }
+        }
+    };
+    
+    const showProductModal = (product = null) => {
+        productForm.reset();
+        productCategorySelect.value = '';
+        document.getElementById('product-id').value = '';
+        if (product) {
+            modalTitle.textContent = 'Edit Produk';
+            document.getElementById('product-id').value = product.id;
+            document.getElementById('product-name').value = product.name;
+            document.getElementById('product-price').value = product.price;
+            document.getElementById('product-stock').value = product.stock;
+            document.getElementById('product-image').value = product.image;
+            productCategorySelect.value = product.category || '';
+        } else {
+            modalTitle.textContent = 'Tambah Produk Baru';
+        }
+        productModal.classList.remove('hidden');
+    };
+
+    const handleFormSubmit = async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('product-id').value;
+        const productData = {
+            id: id || 'prod-' + Date.now(),
+            name: document.getElementById('product-name').value,
+            price: parseFloat(document.getElementById('product-price').value),
+            stock: parseInt(document.getElementById('product-stock').value, 10),
+            image: document.getElementById('product-image').value,
+            category: document.getElementById('product-category').value
+        };
+        const action = id ? 'updateProduct' : 'addProduct';
+        const result = await callAppsScript(action, productData);
+        if (result && result.success) {
+            products = result.data.products;
+            renderProducts();
+            if (currentPage === 'stock') renderStockPage();
+            productModal.classList.add('hidden');
+            showToast(`Produk berhasil ${id ? 'diperbarui' : 'ditambahkan'}!`, 'success');
+        } else {
+            showToast(result.message || 'Gagal menyimpan produk.', 'error');
+        }
+    };
+
+    const handleAddCategory = async (e) => {
+        e.preventDefault();
+        const newCategoryNameInput = document.getElementById('new-category-name');
+        const name = newCategoryNameInput.value.trim();
+        if (!name) return;
+
+        const payload = { id: 'cat-' + Date.now(), name };
+        const result = await callAppsScript('addCategory', payload);
+        if (result && result.success) {
+            categories = result.data.categories;
+            renderCategoryFilters();
+            populateCategoryDropdown();
+            renderCategoryList();
+            newCategoryNameInput.value = '';
+            showToast('Kategori berhasil ditambahkan.', 'success');
+        } else {
+            showToast(result.message || 'Gagal menambahkan kategori.', 'error');
+        }
+    };
+
+    const handleDeleteCategory = async (categoryId) => {
+        if (confirm('Menghapus kategori ini juga akan menghapus kategori dari produk terkait. Lanjutkan?')) {
+            const result = await callAppsScript('deleteCategory', { id: categoryId });
+            if (result && result.success) {
+                categories = result.data.categories;
+                products = result.data.products;
+                renderAll();
+                showToast('Kategori berhasil dihapus.', 'success');
+            } else {
+                showToast(result.message || 'Gagal menghapus kategori.', 'error');
+            }
+        }
+    };
+    
+    // Setup event listeners
+    navLinks.pos.addEventListener('click', (e) => { e.preventDefault(); switchPage('pos'); });
+    navLinks.stock.addEventListener('click', (e) => { e.preventDefault(); switchPage('stock'); });
+    navLinks.staff.addEventListener('click', (e) => { e.preventDefault(); switchPage('staff'); });
+    navLinks.dashboard.addEventListener('click', (e) => { e.preventDefault(); switchPage('dashboard'); });
+    
+    addProductBtn.addEventListener('click', () => showProductModal());
+    cancelModalBtn.addEventListener('click', () => productModal.classList.add('hidden'));
+    productForm.addEventListener('submit', handleFormSubmit);
+    addStaffForm.addEventListener('submit', handleAddStaff);
+    completeTransactionBtn.addEventListener('click', handleTransaction);
+    closeCategoryModalBtn.addEventListener('click', () => categoryModal.classList.add('hidden'));
+    addCategoryForm.addEventListener('submit', handleAddCategory);
+    applyDiscountBtn.addEventListener('click', () => {
+        const type = discountTypeEl.value;
+        const value = parseFloat(discountValueEl.value);
+        if (isNaN(value) || value < 0) {
+            showToast('Nilai diskon tidak valid.', 'error');
+            return;
+        }
+        discount = { type, value };
+        renderCart();
+    });
+
+    removeDiscountBtn.addEventListener('click', () => {
+        discount = { type: 'none', value: 0 };
+        discountValueEl.value = '';
+        renderCart();
+    });
+
+    window.handleEditProduct = (productId) => {
+        const product = products.find(p => p.id === productId);
+        if (product) showProductModal(product);
+    };
+
+    window.handleDeleteProduct = async (productId) => {
+        if (confirm('Apakah Anda yakin ingin menghapus produk ini?')) {
+            const result = await callAppsScript('deleteProduct', { id: productId });
+            if (result.success) {
+                products = result.data.products;
+                renderAll();
+                showToast('Produk berhasil dihapus.', 'success');
+            } else {
+                showToast(result.message || 'Gagal menghapus produk.', 'error');
             }
         }
     };
@@ -887,71 +984,20 @@ document.addEventListener('DOMContentLoaded', () => {
              showToast(result.message || 'Gagal memperbarui stok.', 'error');
         }
     };
-    
+
     window.toggleProductMenu = (productId) => {
         const menu = document.getElementById(`menu-${productId}`);
         menu.classList.toggle('hidden');
     };
     
-    window.handleDeleteTransaction = async (transactionId) => {
-        if (confirm('Apakah Anda yakin ingin menghapus transaksi ini? Stok produk akan dikembalikan.')) {
-            const transactionToDelete = transactions.find(t => t.id === transactionId);
-            if (!transactionToDelete) return;
-
-            const result = await callAppsScript('deleteTransaction', transactionToDelete);
-
-            if (result && result.success) {
-                products = result.data.products;
-                
-                transactions = transactions.filter(t => t.id !== transactionId); // Update local state for immediate UI feedback
-
-                showToast('Transaksi berhasil dibatalkan dan stok dikembalikan.', 'success');
-                
-                renderDashboard(); 
-                if (currentPage === 'pos') renderProducts();
-                if (currentPage === 'stock') renderStockPage();
-                
-            } else {
-                showToast(result.message || 'Gagal membatalkan transaksi.', 'error');
-            }
-        }
-    };
-
-    // Close product menu if clicked outside
-    document.addEventListener('click', function(event) {
-        const openMenus = document.querySelectorAll('[id^="menu-"]:not(.hidden)');
-        openMenus.forEach(menu => {
-            if (!menu.parentElement.contains(event.target)) {
-                menu.classList.add('hidden');
-            }
-        });
-    });
-
-    // =================================================================================
-    // INITIALIZATION
-    // =================================================================================
-    
-    // Setup event listeners
-    navLinks.pos.addEventListener('click', (e) => { e.preventDefault(); switchPage('pos'); });
-    navLinks.stock.addEventListener('click', (e) => { e.preventDefault(); switchPage('stock'); });
-    navLinks.staff.addEventListener('click', (e) => { e.preventDefault(); switchPage('staff'); });
-    navLinks.dashboard.addEventListener('click', (e) => { e.preventDefault(); switchPage('dashboard'); });
-    
-    addProductBtn.addEventListener('click', () => showProductModal());
-    cancelModalBtn.addEventListener('click', hideProductModal);
-    productForm.addEventListener('submit', handleFormSubmit);
-    addStaffForm.addEventListener('submit', handleAddStaff);
-    completeTransactionBtn.addEventListener('click', handleTransaction);
-    dashboardFilter.addEventListener('change', renderDashboard);
-
-    // Load data and start the app
-    loadInitialData().then(() => {
-        hideLoader();
-    });
+    // Init App
+    loadInitialData();
 });
 </script>
 </body>
 </html>
+
+
 
 
 
