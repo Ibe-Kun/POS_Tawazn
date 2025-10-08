@@ -375,7 +375,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const subtotal = cart.reduce((sum, item) => {
             const product = products.find(p => p.id === item.id);
             if (!product) return sum;
-            return sum + (product.price * item.quantity);
+            return sum + (Number(product.price) * item.quantity);
         }, 0);
 
         let discountAmount = 0;
@@ -1064,6 +1064,8 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
+
 
 
 
